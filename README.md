@@ -131,3 +131,29 @@ The seeders and factories create:
 
 - **20 customers** (`CustomerFactory`).
 - **50 orders** (`OrderFactory`) with consecutive invoice numbers (`INV-00001` to `INV-00050`), each with its status history and, when the order is *In route* or *Delivered*, its evidence photos.
+
+## Users API
+
+JSON API for the `users` entity (`halcon/app/Http/Controllers/Api/UserController.php`, routes in `halcon/routes/api.php`).
+
+| Method | Endpoint | Action | Purpose |
+|---|---|---|---|
+| GET | `/api/users` | `index()` | List employees with their role (15 per page) |
+| POST | `/api/users` | `store()` | Register an employee and assign its role (201) |
+| GET | `/api/users/{id}` | `show()` | Retrieve one employee |
+| PUT / PATCH | `/api/users/{id}` | `update()` | Update an employee, e.g. `{"is_active": false}` to deactivate it |
+| DELETE | `/api/users/{id}` | `destroy()` | Delete an employee without history (204); returns 409 if it has orders, photos or status changes |
+
+Send the header `Accept: application/json` so validation errors come back as JSON (422).
+
+Example body for `POST /api/users` (`role_id` must exist in `roles`; `is_active` is optional and defaults to `true`):
+
+```json
+{
+    "name": "Ana López",
+    "email": "purchasing@halcon.com",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "role_id": 3
+}
+```
