@@ -1,8 +1,11 @@
 <?php
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,5 +18,25 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Every error under /api/* is returned as JSON (422, 404, 405, 500...),
+        // even if the client forgets the "Accept: application/json" header.
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson()
+        );
+
+        // Clear 404 messages: an id that does not exist (or an archived order),
+        // or an endpoint that does not exist.
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            if ($e->getPrevious() instanceof ModelNotFoundException) {
+                $model = class_basename($e->getPrevious()->getModel());
+
+                return response()->json(['message' => "{$model} not found."], 404);
+            }
+
+            return response()->json(['message' => 'Endpoint not found.'], 404);
+        });
     })->create();

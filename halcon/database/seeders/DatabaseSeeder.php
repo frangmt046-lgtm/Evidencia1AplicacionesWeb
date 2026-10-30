@@ -27,7 +27,9 @@ class DatabaseSeeder extends Seeder
         // 2. Factories: customers, then 50 orders
         $customers = Customer::factory(20)->create();
 
-        $salesUsers = User::whereHas('role', fn ($query) => $query->where('name', 'Sales'))->get();
+        $salesUsers = User::where('is_active', true)
+            ->whereHas('role', fn ($query) => $query->where('name', 'Sales'))
+            ->get();
 
         Order::factory(50)
             ->recycle($customers)    // each order uses one of the 20 customers
@@ -37,5 +39,10 @@ class DatabaseSeeder extends Seeder
                 'invoice_number' => 'INV-' . str_pad($sequence->index + 1, 5, '0', STR_PAD_LEFT),
             ])
             ->create();
+
+        // 3. Archive (logical delete) 5 orders so GET /api/orders/archived has data
+        Order::whereIn('invoice_number', ['INV-00005', 'INV-00012', 'INV-00023', 'INV-00038', 'INV-00047'])
+            ->get()
+            ->each->delete();
     }
 }

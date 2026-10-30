@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
-    // SoftDeletes = logical delete: delete() only fills deleted_at,
-    // withTrashed()/onlyTrashed() list deleted orders and restore() brings them back.
+
     use HasFactory, SoftDeletes;
 
     public const STATUS_ORDERED = 'Ordered';
@@ -41,25 +40,33 @@ class Order extends Model
         ];
     }
 
+
+    public function nextStatus(): ?string
+    {
+        $position = array_search($this->status, self::STATUSES, true);
+
+        return self::STATUSES[$position + 1] ?? null;
+    }
+
     // An order belongs to one customer
     public function customer()
     {
         return $this->belongsTo(Customer::class);
     }
 
-    // An order is registered by one Sales user
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // An order has many evidence photos (loading and delivery)
+
     public function evidencePhotos()
     {
         return $this->hasMany(EvidencePhoto::class);
     }
 
-    // An order has many status changes
+
     public function statusHistories()
     {
         return $this->hasMany(StatusHistory::class);

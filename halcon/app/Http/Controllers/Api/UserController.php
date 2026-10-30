@@ -12,14 +12,22 @@ class UserController extends Controller
 {
     /**
      * GET /api/users
-     * Lists the employees (15 per page) with their role (department).
+     * Lists the employees (active AND inactive, 15 per page) with their role.
+     * Optional filter: ?status=active or ?status=inactive
      */
-    public function index()
+    public function index(Request $request)
     {
-        return User::select('id', 'name', 'email', 'role_id', 'is_active', 'created_at')
+        $request->validate([
+            'status' => 'sometimes|in:active,inactive',
+        ]);
+
+        return User::select('id', 'name', 'email', 'role_id', 'is_active', 'created_at', 'updated_at')
             ->with('role:id,name')
+            ->when($request->query('status') === 'active', fn ($query) => $query->where('is_active', true))
+            ->when($request->query('status') === 'inactive', fn ($query) => $query->where('is_active', false))
             ->orderBy('id')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
     }
 
     /**
@@ -56,8 +64,8 @@ class UserController extends Controller
 
     /**
      * PUT/PATCH /api/users/{id}
-     * Updates an employee. With PATCH only the fields that change are sent
-     * (for example {"is_active": false} to deactivate it).
+     * Updates the basic information of an employee (name, email, password, role).
+     * With PATCH only the fields that change are sent.
      */
     public function update(Request $request, string $id)
     {
@@ -84,23 +92,57 @@ class UserController extends Controller
     }
 
     /**
+     * PATCH /api/users/{id}/deactivate
+     * Changes the status of an employee to inactive. The user stays in the
+     * database (with all its history) but can no longer register orders
+     * or change order statuses.
+     */
+    public function deactivate(string $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->update(['is_active' => false]);
+
+        return response()->json([
+            'message' => 'User deactivated successfully.',
+            'data' => $user->load('role:id,name'),
+        ]);
+    }
+
+    /**
+     * PATCH /api/users/{id}/activate
+     * Changes the status of an employee back to active.
+     */
+    public function activate(string $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->update(['is_active' => true]);
+
+        return response()->json([
+            'message' => 'User activated successfully.',
+            'data' => $user->load('role:id,name'),
+        ]);
+    }
+
+    /**
      * DELETE /api/users/{id}
-     * Deletes an employee. Returns 204 (no content).
+     * Physically deletes an employee without history. Returns 204 (no content).
      */
     public function destroy(string $id)
     {
         $user = User::findOrFail($id);
 
         // orders, evidence_photos and status_histories have a foreign key to users.
-        // Deleting a user with that history would break it (500 error), so the
-        // user must be deactivated instead (PATCH with "is_active": false).
+        // Deleting a user with that history would break it, so the user must be
+        // deactivated instead (PATCH /api/users/{id}/deactivate).
         $hasHistory = $user->orders()->withTrashed()->exists()
             || $user->evidencePhotos()->exists()
             || $user->statusHistories()->exists();
 
         if ($hasHistory) {
             return response()->json([
-                'message' => 'The user has orders, photos or status changes. Deactivate it instead (is_active = false).',
+                'message' => 'The user has orders, photos or status changes. Deactivate it instead (PATCH /api/users/'.$user->id.'/deactivate).',
             ], 409);
         }
 

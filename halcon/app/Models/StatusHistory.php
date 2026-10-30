@@ -21,13 +21,13 @@ class StatusHistory extends Model
         ];
     }
 
-    // A status change belongs to one order
+
     public function order()
     {
         return $this->belongsTo(Order::class);
     }
 
-    // A status change is made by one user
+
     public function user()
     {
         return $this->belongsTo(User::class);

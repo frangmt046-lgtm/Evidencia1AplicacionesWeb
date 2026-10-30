@@ -80,7 +80,8 @@ class OrderFactory extends Factory
 
     private function userWithRole(string $role): ?User
     {
-        return User::whereHas('role', fn ($query) => $query->where('name', $role))
+        return User::where('is_active', true)
+            ->whereHas('role', fn ($query) => $query->where('name', $role))
             ->inRandomOrder()
             ->first();
     }
