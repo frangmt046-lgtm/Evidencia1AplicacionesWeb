@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -10,11 +10,11 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
+
     use HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
+     * 
      *
      * @var list<string>
      */
@@ -27,7 +27,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
+     * 
      *
      * @var list<string>
      */
@@ -37,7 +37,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     *
      *
      * @return array<string, string>
      */
@@ -50,25 +50,25 @@ class User extends Authenticatable
         ];
     }
 
-    // A user belongs to one role (department)
+
     public function role()
     {
         return $this->belongsTo(Role::class);
     }
 
-    // A Sales user registers many orders
+
     public function orders()
     {
         return $this->hasMany(Order::class);
     }
 
-    // A Route user uploads many evidence photos
+
     public function evidencePhotos()
     {
         return $this->hasMany(EvidencePhoto::class);
     }
 
-    // A user makes many status changes
+
     public function statusHistories()
     {
         return $this->hasMany(StatusHistory::class);

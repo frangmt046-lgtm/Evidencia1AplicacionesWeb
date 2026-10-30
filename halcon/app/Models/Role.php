@@ -11,7 +11,7 @@ class Role extends Model
         'description',
     ];
 
-    // A role (department) has many users
+
     public function users()
     {
         return $this->hasMany(User::class);
