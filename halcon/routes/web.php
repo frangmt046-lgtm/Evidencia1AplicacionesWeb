@@ -2,6 +2,5 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Main screen: customers track their order (Vue.js)
+Route::view('/', 'track')->name('track');
