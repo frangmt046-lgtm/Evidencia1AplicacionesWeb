@@ -8,7 +8,7 @@ The system has two parts:
 
 - **Public screen for customers:** a customer enters their customer number and invoice number to see the status of their order (*Ordered*, *In process*, *In route* or *Delivered*). When the order is delivered, the photo that proves the delivery is displayed.
 - **Administrative dashboard for employees:** the staff logs in according to their department (role):
-  - **Admin:** comes by default with the system; registers new users and assigns their roles.
+  - **Administrator:** comes by default with the system; registers new users and assigns their roles.
   - **Sales:** takes the customers' orders and registers them in the system.
   - **Purchasing:** buys missing materials from external suppliers.
   - **Warehouse:** prepares the orders, changes their status and reports low or missing stock.
@@ -137,18 +137,18 @@ The API is available at `http://127.0.0.1:8000/api`.
 
 The seeders and factories create:
 
-- **5 roles:** Admin, Sales, Purchasing, Warehouse and Route (`RoleSeeder`).
+- **5 roles:** Administrator, Sales, Purchasing, Warehouse and Route (`RoleSeeder`).
 - **7 users** (`UserSeeder`), all with the password `password`:
 
-  | id | Name | Email | Role | Active |
-  |---|---|---|---|---|
-  | 1 | Administrator | admin@halcon.com | Admin | yes |
-  | 2 | Laura Méndez | sales@halcon.com | Sales | yes |
-  | 3 | Jorge Ramírez | warehouse@halcon.com | Warehouse | yes |
-  | 4 | Carlos Torres | route@halcon.com | Route | yes |
-  | 5 | Ana López | purchasing@halcon.com | Purchasing | yes |
-  | 6 | Miguel Herrera | miguel.herrera@halcon.com | Sales | **no** |
-  | 7 | Sofía Castillo | sofia.castillo@halcon.com | Route | **no** |
+  | id | Name | Username | Email | Role | Active |
+  |---|---|---|---|---|---|
+  | 1 | Administrator | `admin` | admin@halcon.com | Administrator | yes |
+  | 2 | Laura Méndez | `sales` | sales@halcon.com | Sales | yes |
+  | 3 | Jorge Ramírez | `warehouse` | warehouse@halcon.com | Warehouse | yes |
+  | 4 | Carlos Torres | `route` | route@halcon.com | Route | yes |
+  | 5 | Ana López | `purchasing` | purchasing@halcon.com | Purchasing | yes |
+  | 6 | Miguel Herrera | `miguel.herrera` | miguel.herrera@halcon.com | Sales | **no** |
+  | 7 | Sofía Castillo | `sofia.castillo` | sofia.castillo@halcon.com | Route | **no** |
 
 - **20 customers** (`CustomerFactory`).
 - **50 orders** (`OrderFactory`) with consecutive invoice numbers (`INV-00001` to `INV-00050`), each with its status history and, when the order is *In route* or *Delivered*, its evidence photos.
@@ -187,7 +187,7 @@ Content-Type: application/json
 | PATCH | `/api/users/{id}/activate` | Change the status of a user back to active. |
 | DELETE | `/api/users/{id}` | Physically delete a user **without** history (`204`); returns `409` if it has orders, photos or status changes. |
 
-Body for `POST /api/users` (`role_id`: 1 Admin, 2 Sales, 3 Purchasing, 4 Warehouse, 5 Route):
+Body for `POST /api/users` (`role_id`: 1 Administrator, 2 Sales, 3 Purchasing, 4 Warehouse, 5 Route):
 
 ```json
 {
@@ -262,6 +262,56 @@ Needed to know which `customer_id` to send when an order is created.
 | GET | `/api/customers/{id}` | Retrieve one customer with its number of orders. |
 | POST | `/api/customers` | Create a customer. Returns `201`. |
 
+## Main screen: Track Your Order (Vue.js)
+
+The home page (`http://127.0.0.1:8000/`) is the public screen where customers check their order. It is built with **Vue.js 3** (file `halcon/resources/views/track.blade.php`, Vue loaded from `halcon/public/js/vue.global.prod.js`, so no `npm install` or build step is needed).
+
+The screen shows the company name **HALCON**, the title **Track Your Order**, a short instruction, the **Customer Number** and **Invoice Number** fields and the **Check Order Status** button.
+
+How it works:
+
+1. The customer types both numbers (uppercase/lowercase does not matter) and clicks **Check Order Status**.
+2. Vue validates that both fields are filled and calls the API with `fetch`:
+   `GET /api/track?customer_number=CUS-12345&invoice_number=INV-00001`
+3. The order is displayed without reloading the page: current status, progress bar (*Ordered → In process → In route → Delivered*) with dates, order details (customer, order date, delivery address, notes, last update) and the status history. If the order is *Delivered*, the proof-of-delivery photo section is shown.
+4. If the numbers do not match an order of that customer (or the order is archived), a friendly error message is shown.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/track?customer_number=&invoice_number=` | Public tracking. Returns `200` with the order, `404` if the invoice does not belong to that customer, `422` if a field is missing. |
+
+To try it, run `php artisan migrate:fresh --seed`, open `/api/orders` to copy an `invoice_number` and its `customer.customer_number`, and enter them on the main screen.
+
+## Administrative Dashboard, Users and Roles (Activity 13)
+
+Employees log in at **http://127.0.0.1:8000/login** with their **username or email** and password.
+Customers do not have accounts: there is no registration route (`/register` returns 404); only the Administrator registers employees.
+
+| Screen | URL | Who can open it |
+|---|---|---|
+| Login | `/login` | guests |
+| Dashboard (name, role and modules of the user) | `/dashboard` | any active employee |
+| User Management (list, register, edit, activate/deactivate, assign role) | `/dashboard/users` | Administrator |
+| Customer Orders | `/dashboard/modules/sales` | Sales, Administrator |
+| Purchasing | `/dashboard/modules/purchasing` | Purchasing, Administrator |
+| Warehouse | `/dashboard/modules/warehouse` | Warehouse, Administrator |
+| Routes & Delivery | `/dashboard/modules/route` | Route, Administrator |
+
+How it works:
+
+- **Login** (`LoginController`): validates the credentials, shows *"Incorrect username/email or password."* when they are wrong, and rejects deactivated users. Max. 5 attempts per minute. **Log out** button in the side menu.
+- **Middleware** `auth` + `active` (`EnsureUserIsActive`): only logged-in, active employees enter the dashboard. If the Administrator deactivates someone, their session is closed on their next click.
+- **Middleware** `role:...` (`EnsureUserHasRole`): role-based access. A user without the role gets a **403 Access denied** page, even if they type the URL.
+- **Modules** are defined in `config/halcon.php` with the roles that can open each one. The dashboard and the side menu show only the modules of the user's role.
+- **User Management** (`Admin\UserManagementController`): users are never deleted (only deactivated) so their order history is kept. The Administrator cannot deactivate themself or remove their own Administrator role.
+
+Quick demo:
+
+1. Log in as `admin` / `password` → dashboard with **Administrator** role and all modules.
+2. User Management → **Register employee** (e.g. `pedro.gomez`, role **Warehouse**).
+3. Log out and log in as `pedro.gomez` → dashboard with **Warehouse** role and only the Warehouse module.
+4. Open `/dashboard/users` as Pedro → **403 Access denied**.
+
 ## Testing the API
 
 ### Postman
@@ -275,7 +325,7 @@ Import `postman/Halcon_API.postman_collection.json` in Postman. The collection h
 
 ```bash
 cd halcon
-php artisan test --filter=ApiTest
+php artisan test
 ```
 
-`tests/Feature/UserApiTest.php` and `tests/Feature/OrderApiTest.php` check every endpoint and business rule using an in-memory SQLite database.
+`tests/Feature/UserApiTest.php` and `tests/Feature/OrderApiTest.php` check every endpoint and business rule using an in-memory SQLite database. `tests/Feature/OrderTrackingTest.php` checks the main screen and the public order search.

@@ -13,11 +13,11 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $roles = [
-            ['name' => 'Admin', 'description' => 'Registers new users and assigns their roles.'],
-            ['name' => 'Sales', 'description' => 'Takes orders from customers and registers them.'],
-            ['name' => 'Purchasing', 'description' => 'Buys missing materials from external suppliers.'],
-            ['name' => 'Warehouse', 'description' => 'Prepares orders and reports low or missing stock.'],
-            ['name' => 'Route', 'description' => 'Delivers orders and uploads the evidence photos.'],
+            ['name' => Role::ADMINISTRATOR, 'description' => 'Manages users and roles.'],
+            ['name' => Role::SALES, 'description' => 'Creates and manages customer orders.'],
+            ['name' => Role::PURCHASING, 'description' => 'Supports orders that require purchasing missing materials.'],
+            ['name' => Role::WAREHOUSE, 'description' => 'Processes and prepares orders.'],
+            ['name' => Role::ROUTE, 'description' => 'Manages routed orders and delivery evidence.'],
         ];
 
         foreach ($roles as $role) {

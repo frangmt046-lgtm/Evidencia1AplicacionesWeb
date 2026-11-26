@@ -30,7 +30,7 @@ class UserApiTest extends TestCase
         $this->getJson('/api/users/1')
             ->assertOk()
             ->assertJsonPath('email', 'admin@halcon.com')
-            ->assertJsonPath('role.name', 'Admin')
+            ->assertJsonPath('role.name', 'Administrator')
             ->assertJsonMissingPath('password');
 
         $this->getJson('/api/users/999')

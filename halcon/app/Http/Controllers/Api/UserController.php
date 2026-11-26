@@ -21,7 +21,7 @@ class UserController extends Controller
             'status' => 'sometimes|in:active,inactive',
         ]);
 
-        return User::select('id', 'name', 'email', 'role_id', 'is_active', 'created_at', 'updated_at')
+        return User::select('id', 'name', 'username', 'email', 'role_id', 'is_active', 'created_at', 'updated_at')
             ->with('role:id,name')
             ->when($request->query('status') === 'active', fn ($query) => $query->where('is_active', true))
             ->when($request->query('status') === 'inactive', fn ($query) => $query->where('is_active', false))
@@ -38,6 +38,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'username' => 'sometimes|nullable|string|min:3|max:50|regex:/^[A-Za-z0-9._-]+$/|unique:users,username',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'role_id' => 'required|integer|exists:roles,id',
@@ -73,6 +74,10 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
+            'username' => [
+                'sometimes', 'nullable', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z0-9._-]+$/',
+                Rule::unique('users', 'username')->ignore($user->id),
+            ],
             'email' => [
                 'sometimes', 'required', 'string', 'email', 'max:255',
                 Rule::unique('users', 'email')->ignore($user->id),

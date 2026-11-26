@@ -14,12 +14,13 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
-     * 
+     *
      *
      * @var list<string>
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'role_id',
@@ -27,7 +28,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * 
+     *
      *
      * @var list<string>
      */
@@ -72,5 +73,27 @@ class User extends Authenticatable
     public function statusHistories()
     {
         return $this->hasMany(StatusHistory::class);
+    }
+
+    /**
+     * Name of the user's role, or null when it has none.
+     */
+    public function roleName(): ?string
+    {
+        return $this->role?->name;
+    }
+
+    /**
+     * true when the user has one of the given roles.
+     * Example: $user->hasRole('Sales', 'Administrator')
+     */
+    public function hasRole(string ...$roles): bool
+    {
+        return in_array($this->roleName(), $roles, true);
+    }
+
+    public function isAdministrator(): bool
+    {
+        return $this->hasRole(Role::ADMINISTRATOR);
     }
 }
