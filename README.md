@@ -312,6 +312,31 @@ Quick demo:
 3. Log out and log in as `pedro.gomez` → dashboard with **Warehouse** role and only the Warehouse module.
 4. Open `/dashboard/users` as Pedro → **403 Access denied**.
 
+## Order Management (Activity 14)
+
+Screens of the Administrative Dashboard under `/dashboard/orders` (`OrderManagementController`).
+
+| Screen | URL | Who |
+|---|---|---|
+| Active orders (search/filter) | `/dashboard/orders` | every employee |
+| New order | `/dashboard/orders/create` | Sales, Administrator |
+| Order details | `/dashboard/orders/{id}` | every employee |
+| Edit order | `/dashboard/orders/{id}/edit` | depends on the role |
+| Deleted orders (search, edit, restore) | `/dashboard/orders/deleted` | Sales, Administrator |
+
+- **Create:** the invoice number is consecutive and assigned automatically. The form asks for the customer number, customer or company name, RFC, fiscal address, email, phone, date and time, delivery address and notes. Every new order starts with the status **Ordered** and the first row of its status history is saved. The order can be found right away in the customer's *Track Your Order* screen.
+- **Filters:** invoice number, customer number, date and status (they can be combined).
+- **Editable fields by role** (`config/halcon.php`, key `orders`):
+  - Administrator: customer, date, delivery address, notes and status.
+  - Sales: customer, date, delivery address and notes.
+  - Purchasing: notes.
+  - Warehouse: status (Ordered → In process → In route).
+  - Route: status (In route → Delivered).
+- **Logical delete:** the order is not removed from the database. `deleted_at` and `deleted_by` (new column, migration `2026_11_26_000001`) are filled, it disappears from the active list and from the public tracking, and it appears in **Deleted Orders**.
+- **Restore:** clears `deleted_at` / `deleted_by` and the order appears again in the active list.
+
+Flow: Login → Create Order → Ordered → Search Order → View Details → Edit → Logical Delete → View Deleted Orders → Restore Order. Tests: `tests/Feature/OrderManagementTest.php`.
+
 ## Testing the API
 
 ### Postman

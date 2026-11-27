@@ -115,7 +115,7 @@ class AdminDashboardTest extends TestCase
             ->assertOk()
             ->assertSee('Laura Méndez')
             ->assertSee(Role::SALES)
-            ->assertSee('Customer Orders')
+            ->assertSee('Order Management')
             ->assertDontSee('User Management')
             ->assertDontSee('data-module="warehouse"', false);
     }

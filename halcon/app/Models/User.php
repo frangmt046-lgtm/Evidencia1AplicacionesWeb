@@ -96,4 +96,37 @@ class User extends Authenticatable
     {
         return $this->hasRole(Role::ADMINISTRATOR);
     }
+
+    public function canManageOrders(): bool
+    {
+        return $this->hasRole(...config('halcon.orders.manage'));
+    }
+
+    public function editableOrderFields(Order $order): array
+    {
+        $fields = config('halcon.orders.editable_fields.'.$this->roleName(), []);
+
+        if ($order->trashed()) {
+            $fields = array_values(array_diff($fields, ['status']));
+        }
+
+        if (in_array('status', $fields, true) && $this->allowedOrderStatuses($order) === []) {
+            $fields = array_values(array_diff($fields, ['status']));
+        }
+
+        return $fields;
+    }
+
+    public function canEditOrderField(Order $order, string $field): bool
+    {
+        return in_array($field, $this->editableOrderFields($order), true);
+    }
+
+    public function allowedOrderStatuses(Order $order): array
+    {
+        $next = $order->nextStatus();
+        $targets = config('halcon.orders.status_targets.'.$this->roleName(), []);
+
+        return $next !== null && in_array($next, $targets, true) ? [$next] : [];
+    }
 }

@@ -18,15 +18,33 @@ return [
             'title' => 'User Management',
             'description' => 'Register employees, edit them, activate or deactivate them and assign their role.',
             'route' => 'admin.users.index',
+            'active' => ['admin.users.*'],
             'roles' => [Role::ADMINISTRATOR],
         ],
 
         'sales' => [
-            'title' => 'Customer Orders',
-            'description' => 'Create and manage customer orders.',
-            'route' => 'modules.show',
+            'title' => 'Order Management',
+            'description' => 'Create, search, view, edit and delete customer orders.',
+            'route' => 'admin.orders.index',
+            'active' => ['admin.orders.index', 'admin.orders.create', 'admin.orders.show', 'admin.orders.edit'],
             'roles' => [Role::SALES, Role::ADMINISTRATOR],
-            'statuses' => null, // every status
+            'statuses' => null,
+        ],
+
+        'deleted' => [
+            'title' => 'Deleted Orders',
+            'description' => 'Search, edit and restore orders that were logically deleted.',
+            'route' => 'admin.orders.deleted',
+            'active' => ['admin.orders.deleted'],
+            'roles' => [Role::SALES, Role::ADMINISTRATOR],
+        ],
+
+        'orders' => [
+            'title' => 'All Orders',
+            'description' => 'Search every active order and update the fields your department is allowed to change.',
+            'route' => 'admin.orders.index',
+            'active' => ['admin.orders.index', 'admin.orders.show', 'admin.orders.edit'],
+            'roles' => [Role::PURCHASING, Role::WAREHOUSE, Role::ROUTE],
         ],
 
         'purchasing' => [
@@ -51,6 +69,25 @@ return [
             'route' => 'modules.show',
             'roles' => [Role::ROUTE, Role::ADMINISTRATOR],
             'statuses' => ['In route', 'Delivered'],
+        ],
+    ],
+
+    'orders' => [
+
+        'manage' => [Role::SALES, Role::ADMINISTRATOR],
+
+        'editable_fields' => [
+            Role::ADMINISTRATOR => ['customer', 'ordered_at', 'delivery_address', 'notes', 'status'],
+            Role::SALES => ['customer', 'ordered_at', 'delivery_address', 'notes'],
+            Role::PURCHASING => ['notes'],
+            Role::WAREHOUSE => ['status'],
+            Role::ROUTE => ['status'],
+        ],
+
+        'status_targets' => [
+            Role::ADMINISTRATOR => ['In process', 'In route', 'Delivered'],
+            Role::WAREHOUSE => ['In process', 'In route'],
+            Role::ROUTE => ['Delivered'],
         ],
     ],
 

@@ -108,7 +108,7 @@
 
     /* Forms */
     label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
-    input[type=text], input[type=email], input[type=password], select {
+    input[type=text], input[type=email], input[type=password], input[type=date], input[type=datetime-local], select {
         width: 100%; padding: 11px 13px; font-size: 15px; border: 1px solid #d1d5db;
         border-radius: 8px; outline: none; background: #fff; font-family: inherit;
     }
@@ -142,6 +142,21 @@
     /* Pagination (Laravel simple-tailwind markup fallback) */
     nav[role=navigation] { margin-top: 14px; font-size: 14px; }
     nav[role=navigation] svg { width: 18px; height: 18px; }
+
+    .order-status { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
+    .order-status-ordered { background: #e0e7ff; color: #3730a3; }
+    .order-status-in-process { background: #fef3c7; color: #92400e; }
+    .order-status-in-route { background: #ffedd5; color: #9a3412; }
+    .order-status-delivered { background: #d1fae5; color: #065f46; }
+    .order-status-deleted { background: #fee2e2; color: #991b1b; }
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 24px; }
+    .detail-label { color: var(--muted); font-size: 13px; font-weight: 600; }
+    .detail-value { font-size: 15px; }
+    .section-title { margin: 0 0 14px; font-size: 18px; }
+    .timeline { list-style: none; margin: 0; padding: 0; }
+    .timeline li { padding: 8px 0 8px 18px; border-left: 3px solid var(--amber); margin-left: 6px; }
+    textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+    .form-grid .full { grid-column: 1 / -1; }
 
     @media (max-width: 860px) {
         .shell { grid-template-columns: 1fr; }

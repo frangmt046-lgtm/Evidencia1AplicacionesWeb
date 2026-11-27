@@ -12,7 +12,7 @@
         @else
             Showing all active orders.
         @endif
-        The actions of this department are available in the REST API and will be added to this screen in the next activities.
+        Open an order to see its details and update the fields your role is allowed to change.
     </div>
 
     <div class="card table-wrap">
@@ -33,7 +33,7 @@
             <tbody>
             @forelse ($orders as $order)
                 <tr>
-                    <td><strong>{{ $order->invoice_number }}</strong></td>
+                    <td><a href="{{ route('admin.orders.show', $order) }}"><strong>{{ $order->invoice_number }}</strong></a></td>
                     <td>{{ $order->customer?->name }}<br><span class="muted">{{ $order->customer?->customer_number }}</span></td>
                     <td>{{ $order->ordered_at?->format('Y-m-d H:i') }}</td>
                     <td><span class="role-badge">{{ $order->status }}</span></td>

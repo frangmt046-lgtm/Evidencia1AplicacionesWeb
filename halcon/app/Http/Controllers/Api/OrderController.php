@@ -114,7 +114,7 @@ class OrderController extends Controller
         $order = DB::transaction(function () use ($validated) {
             $order = Order::create([
                 ...$validated,
-                'invoice_number' => $validated['invoice_number'] ?? $this->nextInvoiceNumber(),
+                'invoice_number' => $validated['invoice_number'] ?? Order::nextInvoiceNumber(),
                 'ordered_at' => $validated['ordered_at'] ?? now(),
                 'status' => Order::STATUS_ORDERED,
             ]);
@@ -271,20 +271,5 @@ class OrderController extends Controller
                 $field => 'The selected user is inactive and cannot perform this action.',
             ]);
         }
-    }
-
-    /**
-     * Next consecutive invoice number: INV-00051, INV-00052, ...
-     * Archived orders are included so a number is never reused.
-     */
-    private function nextInvoiceNumber(): string
-    {
-        $max = Order::withTrashed()
-            ->where('invoice_number', 'like', 'INV-%')
-            ->pluck('invoice_number')
-            ->map(fn ($number) => (int) substr($number, 4))
-            ->max() ?? 0;
-
-        return 'INV-'.str_pad($max + 1, 5, '0', STR_PAD_LEFT);
     }
 }

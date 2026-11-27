@@ -25,8 +25,8 @@
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
             @foreach ($menu as $item)
                 @php
-                    $isActive = $item['key'] === 'users'
-                        ? request()->routeIs('admin.users.*')
+                    $isActive = isset($item['active'])
+                        ? request()->routeIs(...$item['active'])
                         : request()->routeIs('modules.show') && request()->route('module') === $item['key'];
                 @endphp
                 <a href="{{ $item['url'] }}" class="{{ $isActive ? 'active' : '' }}">{{ $item['title'] }}</a>

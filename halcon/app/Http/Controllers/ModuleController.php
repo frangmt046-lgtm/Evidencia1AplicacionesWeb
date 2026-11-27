@@ -21,7 +21,7 @@ class ModuleController extends Controller
         $config = config("halcon.modules.{$module}");
 
         // "users" has its own controller; unknown modules → 404
-        if (! $config || $module === 'users') {
+        if (! $config || ! array_key_exists('statuses', $config)) {
             abort(404);
         }
 

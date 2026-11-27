@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\OrderManagementController;
 use App\Models\Role;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,23 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('{user}/edit', 'edit')->name('edit')->whereNumber('user');
             Route::put('{user}', 'update')->name('update')->whereNumber('user');
             Route::patch('{user}/toggle-status', 'toggleStatus')->name('toggle')->whereNumber('user');
+        });
+
+    Route::prefix('dashboard/orders')
+        ->name('admin.orders.')
+        ->controller(OrderManagementController::class)
+        ->group(function () {
+            $manage = 'role:'.implode(',', config('halcon.orders.manage'));
+
+            Route::get('/', 'index')->name('index');
+            Route::get('create', 'create')->name('create')->middleware($manage);
+            Route::post('/', 'store')->name('store')->middleware($manage);
+            Route::get('deleted', 'deleted')->name('deleted')->middleware($manage);
+            Route::get('{order}', 'show')->name('show')->whereNumber('order')->withTrashed();
+            Route::get('{order}/edit', 'edit')->name('edit')->whereNumber('order')->withTrashed();
+            Route::put('{order}', 'update')->name('update')->whereNumber('order')->withTrashed();
+            Route::delete('{order}', 'destroy')->name('destroy')->whereNumber('order')->middleware($manage);
+            Route::patch('{order}/restore', 'restore')->name('restore')->whereNumber('order')->withTrashed()->middleware($manage);
         });
 
     Route::get('dashboard/modules/{module}', [ModuleController::class, 'show'])
